@@ -1,0 +1,11 @@
+Django
+packaging
+typing_extensions
+soccerdata
+pandas
+ScraperFC
+react
+pyarrow
+matplotlib
+understatapi
+bs4

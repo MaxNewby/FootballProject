@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+
+<style>
+
+    :root {
+  --base-depth: 10;
+}
+
+.player.team-a {
+    width: 40px;
+    height: 40px;
+    background-color: #4292C6;
+    border: 2px solid #2171B5;
+    border-radius: 50%;
+    cursor: grab;
+    position: absolute;
+    z-index: 10;
+}
+
+.player.team-b {
+    width: 40px;
+    height: 40px;
+    background-color: #FF6B6B;
+    border: 2px solid #8B0000;
+    border-radius: 50%;
+    cursor: grab;
+    position: absolute;
+    z-index: 10;
+}
+
+.player:active {
+    cursor: grabbing;
+}
+
+.tab-buttons {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    background: rgba(0, 0, 0.8, 0.2);
+    color: white;
+    border: 2px solid white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.tab-button:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.tab-button.active {
+    background: #000000;
+    color: #FFFFFF;
+}
+
+.pitch-view {
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.pitch-view.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tactic-container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.pitch-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+}
+
+.middle-bar {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    width: 100%;
+    background-color: #FF6B6B;
+}
+
+.sidebar {
+    flex: 1;
+    position: relative;
+    height: 100%;
+    width: 95%;
+    background-color: black
+}
+
+.pitch {
+    width: 95%;
+    aspect-ratio: 68 / 105;
+    position: relative;
+    background: #388e3c;
+    border: 3px solid white;
+}
+
+.halfway-line {
+    position: absolute;
+    top: calc(50% - 1px);
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: white;
+}
+
+.centre-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 26.9%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+}
+
+.centre-spot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.5%;
+    aspect-ratio: 1;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.top-penalty-box {
+    position: absolute;
+    left: 20.382%;
+    top: 0;
+    height: 15.714%;
+    width: 59.235%;
+    border: 3px solid white;
+    background: #388e3c;
+    border-top: 0;
+    pointer-events: none;
+    isolation: isolate;
+    z-index: 10;
+}
+
+.top-six-yard-box {
+    position: absolute;
+    height: 33%;
+    width: 33%;
+    border: 3px solid white;
+    border-top: 0;
+    left: 50%;
+    top: 16.67%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.top-penalty-spot {
+    position: absolute;
+    top: 66%;
+    left: 50%;
+    width: 2.5%;
+    aspect-ratio: 1;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.top-penalty-arc {
+    position: absolute;
+    top: 10.45%;
+    left: 50%;
+    width: 27%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(50% 0 0 0);
+    z-index: 9;
+}
+
+.bottom-penalty-box {
+    position: absolute;
+    left: 20.382%;
+    bottom: 0;
+    height: 15.714%;
+    width: 59.235%;
+    border: 3px solid white;
+    background: #388e3c;
+    border-bottom: 0;
+    pointer-events: none;
+    isolation: isolate;
+    z-index: 10;
+}
+
+.bottom-six-yard-box {
+    position: absolute;
+    height: 33%;
+    width: 33%;
+    border: 3px solid white;
+    border-bottom: 0;
+    left: 50%;
+    bottom: -16.67%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+
+.bottom-penalty-spot {
+    position: absolute;
+    top: 33%;
+    left: 50%;
+    width: 2.5%;
+    aspect-ratio: 1;
+    background: white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.bottom-penalty-arc {
+    position: absolute;
+    top: 89.55%;
+    left: 50%;
+    width: 27%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(0 0 50% 0);
+    z-index: 9;
+}
+
+.top-left-corner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(50% 0 0 50%);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.top-right-corner {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    width: 5%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(50% 50% 0 0);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.bottom-left-corner {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 5%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(0 0 50% 50%);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.bottom-right-corner {
+    position: absolute;
+    left: 100%;
+    top: 100%;
+    width: 5%;
+    aspect-ratio: 1;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    clip-path: inset(0 50% 50% 0);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+</style>
+
+<div class="app" style="display: flex; height: 75dvh; width: 95dvw;">
+
+    <div class="tab-buttons">
+        <button class="tab-button active" onclick="switchTab('attacking')">Home</button>
+        <button class="tab-button" onclick="switchTab('defending')">Away</button>
+    </div>
+
+    <div class="tactic-container">
+        <!-- Pitch 1: Home Team Setup -->
+        <div id="home-tactics" class="pitch-view active" style="flex: 4;">
+            <div class="pitch-column">
+                <div class="pitch" data-team='home-attack'>
+                    <!-- Halfway Line -->
+
+                    <div class="halfway-line"></div>
+                    <div class="centre-circle"></div>
+                    <div class="centre-spot"></div>
+
+                    <!-- Top Penalty Box -->
+                    <div class="top-penalty-box">
+                        <div class="top-six-yard-box"></div>
+                        <div class="top-penalty-spot"></div>
+                    </div>
+                    <div class="top-penalty-arc"></div>
+
+                    <!-- Bottom Penalty Box -->
+                    <div class="bottom-penalty-box">
+                        <div class="bottom-six-yard-box"></div>
+                        <div class="bottom-penalty-spot"></div>
+                    </div>
+                    <div class="bottom-penalty-arc"></div>
+
+                    <!-- Corners  -->
+                    <div class="top-left-corner"></div>
+                    <div class="top-right-corner"></div>
+                    <div class="bottom-left-corner"></div>
+                    <div class="bottom-right-corner"></div>
+                </div>
+
+                <div class="sidebar" data-team="home-attack-sidebar">
+                </div>
+            </div>
+
+            <div class="middle-bar">
+                <button type="button" style="top: 20%">Click Here</button>
+                <br>
+                <label for="players">Choose Player</label>
+                <select name="players" id="players">
+                    <option value="a">a</option>
+                    <option value="b">b</option>
+                </select>
+
+            </div>
+
+                <div class="pitch-column">
+                    <div class="pitch" data-team="home-defense">
+                          <!-- Halfway Line -->
+
+                        <div class="halfway-line"></div>
+                        <div class="centre-circle"></div>
+                        <div class="centre-spot"></div>
+
+                        <!-- Top Penalty Box -->
+                        <div class="top-penalty-box">
+                            <div class="top-six-yard-box"></div>
+                            <div class="top-penalty-spot"></div>
+                        </div>
+                        <div class="top-penalty-arc"></div>
+
+                        <!-- Bottom Penalty Box -->
+                        <div class="bottom-penalty-box">
+                            <div class="bottom-six-yard-box"></div>
+                            <div class="bottom-penalty-spot"></div>
+                        </div>
+                        <div class="bottom-penalty-arc"></div>
+
+                        <!-- Corners  -->
+                        <div class="top-left-corner"></div>
+                        <div class="top-right-corner"></div>
+                        <div class="bottom-left-corner"></div>
+                        <div class="bottom-right-corner"></div>
+                    </div>
+
+                    <div class="sidebar" data-team="home-defense">
+                    </div>
+                </div>
+        </div>
+
+        <div id="away-tactics" class="pitch-view" style="flex: 4; flex-direction: row; position: relative;">
+            <div class="pitch-column">
+                <div class="pitch" data-team="away-attack">
+                    <!-- Halfway Line -->
+
+                    <div class="halfway-line"></div>
+                    <div class="centre-circle"></div>
+                    <div class="centre-spot"></div>
+
+                    <!-- Top Penalty Box -->
+                    <div class="top-penalty-box">
+                        <div class="top-six-yard-box"></div>
+                        <div class="top-penalty-spot"></div>
+                    </div>
+                    <div class="top-penalty-arc"></div>
+
+                    <!-- Bottom Penalty Box -->
+                    <div class="bottom-penalty-box">
+                        <div class="bottom-six-yard-box"></div>
+                        <div class="bottom-penalty-spot"></div>
+                    </div>
+                    <div class="bottom-penalty-arc"></div>
+
+                    <!-- Corners  -->
+                    <div class="top-left-corner"></div>
+                    <div class="top-right-corner"></div>
+                    <div class="bottom-left-corner"></div>
+                    <div class="bottom-right-corner"></div>
+                </div>
+
+                <div class="sidebar" data-team="away-attack">
+                </div>
+            </div>
+
+            <div class="middle-bar" style="background-color: #4292C6"></div>
+
+            <div class="pitch-column">
+                <div class="pitch" data-team="away-defense">
+                      <!-- Halfway Line -->
+
+                    <div class="halfway-line"></div>
+                    <div class="centre-circle"></div>
+                    <div class="centre-spot"></div>
+
+                    <!-- Top Penalty Box -->
+                    <div class="top-penalty-box">
+                        <div class="top-six-yard-box"></div>
+                        <div class="top-penalty-spot"></div>
+                    </div>
+                    <div class="top-penalty-arc"></div>
+
+                    <!-- Bottom Penalty Box -->
+                    <div class="bottom-penalty-box">
+                        <div class="bottom-six-yard-box"></div>
+                        <div class="bottom-penalty-spot"></div>
+                    </div>
+                    <div class="bottom-penalty-arc"></div>
+
+                    <!-- Corners  -->
+                    <div class="top-left-corner"></div>
+                    <div class="top-right-corner"></div>
+                    <div class="bottom-left-corner"></div>
+                    <div class="bottom-right-corner"></div>
+                </div>
+
+                <div class="sidebar" data-team="away-defense">
+                </div>
+            </div>
+        </div>
+
+            <!--
+            <div class="pitch" style="position: relative; width: 95%; height: 95%; background: #388e3c; border: 3px solid white; aspect-ratio: 105 / 68;">
+                <div class="halfway-line" style="position: absolute; top: 0; left: 50%; width: 3px; height: 100%; background: white"></div>
+                <div class="centre-circle" style=" position: absolute; top: 50%; left: 50%; width: 17.428%; aspect-ratio: 1; border: 3px solid white; border-radius: 50%; transform: translate(-50%, -50%); box-sizing: border-box;"></div>
+
+                <div class="penalty-box-edge-left" style="position: absolute; left: 10.476%; top: 50%; width: 17.428%; aspect-ratio: 1; border: 3px solid white; border-radius: 50%; transform: translate(-50%, -50%); clip-path: inset(0 0 0 50%);"></div>
+                <div class="penalty-box-edge-left-cover" style="position: absolute; left: 0; top: 20.382%; width: 15.714%; height: 59.235%; background: #388e3c; pointer-events: none;"></div>
+                <div class="penalty-box-edge-right" style="position: absolute; right: 10.476%; top: 50%; width: 17.428%; aspect-ratio: 1; border: 3px solid white; border-radius: 50%; transform: translate(50%, -50%); clip-path: inset(0 50% 0 0);"></div>
+                <div class="penalty-box-edge-right-cover" style="position: absolute; right: 0; top: 20.382%; width: 15.714%; height: 59.235%; background: #388e3c; pointer-events: none;"></div>
+
+                <div class="penalty-box left" style="position: absolute; top: 20.38%; left: 0; width: 15.7%; height: 59.24%; border: 3px solid white; border-left: 0;"></div>
+                <div class="penalty-box right" style="position: absolute; top: 20.38%; right: 0; width: 15.7%; height: 59.24%; border: 3px solid white; border-right: 0;"></div>
+
+                <div class="goal-box left" style="position: absolute; top: 36.53%; width: 5.24%; height: 26.94%; border: 3px solid white; left: 0; border-left: 0;"></div>
+                <div class="goal-box right" style="position: absolute; top: 36.53%; width: 5.24%; height: 26.94%; border: 3px solid white; right: 0; border-right: 0;"></div>
+
+                <div class="goal left" style="position: absolute; top: 44.62%; width: 2%; height: 10.77%; border: 3px solid white; left: -2%;"></div>
+                <div class="goal right" style="position: absolute; top: 44.62%; width: 2%; height: 10.77%; border: 3px solid white; right: -2%;"></div>
+
+                <div class="penalty-spot-left" style="position: absolute; left: 10.45%; top: 50%; width: 0.6%; aspect-ratio: 1; background: white; border-radius: 50%; transform: translate(-50%, -50%);"></div>
+                <div class="penalty-spot-right" style="position: absolute; right: 10.45%; top: 50%; width: 0.6%; aspect-ratio: 1; background: white; border-radius: 50%; transform: translate(50%, -50%);"></div>
+
+                <div id="def_a_player_1" class="player team-a" style="left: 3%; top: 50%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_2" class="player team-a" style="left: 15%; top: 20%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_3" class="player team-a" style="left: 15%; top: 40%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_4" class="player team-a" style="left: 15%; top: 60%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_5" class="player team-a" style="left: 15%; top: 80%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_6" class="player team-a" style="left: 32%; top: 20%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_7" class="player team-a" style="left: 32%; top: 40%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_8" class="player team-a" style="left: 32%; top: 60%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_9" class="player team-a" style="left: 32%; top: 80%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_10" class="player team-a" style="left: 45%; top: 35%; transform: translate(-50%, -50%);"></div>
+                <div id="def_a_player_11" class="player team-a" style="left: 45%; top: 65%; transform: translate(-50%, -50%);"></div>
+
+                <div id="def_b_player_1" class="player team-b" style="right: 3%; top: 50%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_2" class="player team-b" style="right: 15%; top: 20%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_3" class="player team-b" style="right: 15%; top: 40%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_4" class="player team-b" style="right: 15%; top: 60%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_5" class="player team-b" style="right: 15%; top: 80%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_6" class="player team-b" style="right: 32%; top: 20%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_7" class="player team-b" style="right: 32%; top: 40%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_8" class="player team-b" style="right: 32%; top: 60%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_9" class="player team-b" style="right: 32%; top: 80%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_10" class="player team-b" style="right: 45%; top: 35%; transform: translate(50%, -50%);"></div>
+                <div id="def_b_player_11" class="player team-b" style="right: 45%; top: 65%; transform: translate(50%, -50%);"></div>
+            </div>
+            -->
+
+    </div>
+    <!--
+    <div class="sidebar" style="flex: 1; background: #111; color: white; padding: 1rem">
+        Sidebar content
+    </div>
+    -->
+</div>
+
+<script src="{% static 'footypredictor/scripts/draggable_player_icons.js' %}"></script>
+<script>
+function switchTab(tab) {
+    // Hide all pitch views
+    document.querySelectorAll('.pitch-view').forEach(view => {
+        view.classList.remove('active');
+    });
+
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected pitch
+    if (tab === 'attacking') {
+        document.getElementById('home-tactics').classList.add('active');
+        document.querySelectorAll('.tab-button')[0].classList.add('active');
+    } else {
+        document.getElementById('away-tactics').classList.add('active');
+        document.querySelectorAll('.tab-button')[1].classList.add('active');
+    }
+}
+</script>
+
+{% endblock %}
