@@ -6,3 +6,10 @@ out/
 .venv311
 venv311
 __pycache__/
+
+#Datasets
+match_analysis_datasets
+match_event_datasets
+team_analysis_datasets
+player_data_analysis
+player_analysis_datasets
